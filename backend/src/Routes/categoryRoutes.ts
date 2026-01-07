@@ -7,7 +7,7 @@ const router = Router();
 
 router.get('/', getAllCategories);
 
-// Kategori oluşturmayı sadece Admin yapabilsin
+
 router.post('/', authenticateToken, isAdmin, createCategory);
 
 export default router;

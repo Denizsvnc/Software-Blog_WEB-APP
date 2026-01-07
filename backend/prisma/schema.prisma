@@ -42,7 +42,7 @@ model VerificationToken {
   expires    DateTime  // Son kullanma tarihi
   type       TokenType @default(EMAIL_VERIFICATION)
 
-  @@unique([identifier, token]) // Aynı maile aynı koddan iki tane olamaz
+  @@unique([identifier, token]) 
 }
 
 // --------------------------------------

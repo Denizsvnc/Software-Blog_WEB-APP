@@ -18,7 +18,7 @@ const app: Express = express();
 
 // --- GLOBAL MIDDLEWARES ---
 
-// 1. CORS: Frontend (Next.js) ile Backend'in konuşmasını sağlar
+// 1. CORS  Frontend  ile Backend'in konusmasi icin
 app.use(cors({
   origin: [
     'http://localhost:5173',
@@ -27,7 +27,7 @@ app.use(cors({
   credentials: true
 }));
 
-// 2. JSON Parser: Gelen isteklerin body kısmındaki JSON verisini okur
+
 app.use(express.json());
 
 // 3. Static Files: Yüklenen resimlerin tarayıcıdan erişilebilir olmasını sağlar

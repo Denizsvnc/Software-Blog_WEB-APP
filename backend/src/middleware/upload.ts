@@ -2,7 +2,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// 1. Klasör Kontrolü (Yoksa oluştur)
+// 1. Klasör Kontrolü - yoksa olustur
 const uploadDir = 'uploads/';
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);

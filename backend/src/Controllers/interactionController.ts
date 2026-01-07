@@ -40,8 +40,6 @@ export const toggleLike = async (req: Request, res: Response): Promise<void> => 
         return;
     }
 
-    // Kullanıcı bu postu daha önce beğenmiş mi?
-    // Prisma'da composite ID araması (userId_postId)
     const existingLike = await prisma.like.findUnique({
       where: {
         userId_postId: {

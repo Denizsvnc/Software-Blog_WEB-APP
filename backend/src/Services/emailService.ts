@@ -1,8 +1,3 @@
-// Dosya: services/emailService.ts
-// Not: Dosya adı emailService olsa da artık altyapı olarak Telegram kullanıyor.
-
-// Node.js 18+ native fetch kullanır. Ekstra paket gerekmez.
-
 // --- 1. AYARLAR VE KONTROLLER ---
 const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_ID; // Senin Chat ID'n
@@ -24,7 +19,7 @@ const sendTelegramMessage = async (text: string): Promise<void> => {
             body: JSON.stringify({
                 chat_id: ADMIN_CHAT_ID,
                 text: text,
-                parse_mode: 'HTML', // Yazıları kalın/italik yapmak için
+                parse_mode: 'HTML', 
                 disable_web_page_preview: true
             })
         });
@@ -64,10 +59,9 @@ export const sendVerificationEmail = async (to: string, code: string): Promise<v
 // --- 4. BÜLTEN MAİLİ (Simüle Edilmiş) ---
 export const sendNewsletterEmail = async (to: string, subject: string, html: string): Promise<void> => {
     
-    // HTML içeriği Telegram için temizleniyor (Basitçe özet geçiyoruz)
-    // Gerçek HTML'i Telegram'a basmak çok hata verir, o yüzden basitleştirdik.
+   
     const cleanContent = html
-        .replace(/<br\s*\/?>/gi, '\n') // <br> etiketlerini yeni satır yap
+        .replace(/<br\s*\/?>/gi, '\n')
         .replace(/<[^>]*>?/gm, '')     // Diğer tüm HTML etiketlerini sil
         .trim()
         .substring(0, 300);            // Çok uzunsa kes
