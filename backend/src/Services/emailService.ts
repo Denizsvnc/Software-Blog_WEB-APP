@@ -1,16 +1,21 @@
 import nodemailer from 'nodemailer';
 import dns from 'node:dns';
-dns.setDefaultResultOrder('ipv4first'); 
+dns.setDefaultResultOrder('ipv4first');
 // Transporter (Taşıyıcı) Oluşturma
 // Bu ayarlar .env dosyasından gelir
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT),
-  secure: process.env.SMTP_SECURE === 'true', // 465 portu için true, 587 için false
+  secure: process.env.SMTP_SECURE === 'true',
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+  connectionTimeout: 10000, // 10 saniye sonra denemeyi bırak
+  greetingTimeout: 10000,
+  tls: {
+    rejectUnauthorized: false // Sertifika hatalarını görmezden gel
+  }
 });
 
 // Doğrulama Maili Gönderme Fonksiyonu
@@ -38,7 +43,7 @@ export const sendVerificationEmail = async (to: string, code: string): Promise<v
 
     // Maili gönder
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Mail gönderildi: ${info.messageId}`);
+    console.log(`Mail gönderildi: ${info.messageId}`);
 
   } catch (error) {
     console.error('❌ Mail gönderme hatası:', error);
