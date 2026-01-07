@@ -21,8 +21,7 @@ const app: Express = express();
 // 1. CORS: Frontend (Next.js) ile Backend'in konuşmasını sağlar
 app.use(cors({
   origin: [
-    'http://localhost:5173', 
-    'http://localhost:5174', 
+    'http://localhost:5173',
     'https://optimistic-simplicity-production.up.railway.app' 
   ],
   credentials: true
