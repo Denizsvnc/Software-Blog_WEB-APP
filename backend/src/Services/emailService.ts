@@ -21,10 +21,9 @@ const transporter = nodemailer.createTransport({
         pass: process.env.SMTP_PASS,
     },
     tls: {
-        ciphers: 'SSLv3',          // Bağlantı şifreleme uyumluluğu
         rejectUnauthorized: false  // Sertifika hatalarını görmezden gel
     },
-    connectionTimeout: 10000, // 10 saniye bekle
+    connectionTimeout: 30000, // 10 saniye bekle
     greetingTimeout: 10000    // Selamlaşma süresi
 });
 
