@@ -23,7 +23,7 @@ app.use(cors({
   origin: [
     'http://localhost:5173', 
     'http://localhost:5174', 
-    'https://senin-frontend-adresin.up.railway.app' 
+    'https://software-blogweb-app-production.up.railway.app/' 
   ],
   credentials: true
 }));
