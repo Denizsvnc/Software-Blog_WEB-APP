@@ -14,8 +14,8 @@ try {
 // Bu, ETIMEDOUT hatasının kesin çözümüdür.
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',  // Doğrudan host adresi
-    port: 587,               // 587 TLS portu (Daha kararlı)
-    secure: false,           // 587 için MUTLAKA false olmalı
+    port: 465,               // 587 TLS portu (Daha kararlı)
+    secure: true,           // 587 için MUTLAKA false olmalı
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
