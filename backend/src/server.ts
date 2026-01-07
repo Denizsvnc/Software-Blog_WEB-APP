@@ -23,7 +23,7 @@ app.use(cors({
   origin: [
     'http://localhost:5173', 
     'http://localhost:5174', 
-    'https://software-blogweb-app-production.up.railway.app' 
+    'http://optimistic-simplicity-production.up.railway.app/' 
   ],
   credentials: true
 }));
