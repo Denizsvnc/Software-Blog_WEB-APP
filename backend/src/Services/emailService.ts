@@ -1,42 +1,50 @@
 import nodemailer from 'nodemailer';
 import dns from 'node:dns';
 
-// 1. DNS ÇÖZÜMLEME AYARI (Railway için Kritik)
-// IPv6 bağlantı zaman aşımlarını önlemek için IPv4'ü zorluyoruz.
+// 1. DNS FIX
 try {
   dns.setDefaultResultOrder('ipv4first');
 } catch (e) {
-  // Lokal ortamda hata verirse yoksay
+  console.log("DNS ayarı atlandı.");
 }
 
-// 2. TRANSPORTER AYARLARI (GMAIL SERVİSİ)
-// 'host', 'port' ve 'secure' yerine doğrudan 'service: gmail' kullanıyoruz.
-// Bu, ETIMEDOUT hatasının kesin çözümüdür.
+// Env Kontrol
+if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.error("🚨 KRİTİK HATA: SMTP_USER veya SMTP_PASS eksik!");
+}
+
+// 2. TRANSPORTER (KESİN ÇÖZÜM)
+// "as any" kullanarak TypeScript'in "host özelliği yok" ağlamasını susturuyoruz.
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',  // Doğrudan host adresi
-    port: 587,               // 587 TLS portu (Daha kararlı)
-    secure: false,           // 587 için MUTLAKA false olmalı
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, 
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
     },
     tls: {
-        rejectUnauthorized: false  // Sertifika hatalarını görmezden gel
+        rejectUnauthorized: false
     },
-    connectionTimeout: 40000, // 10 saniye bekle
-    greetingTimeout: 10000    // Selamlaşma süresi
+    family: 4, // IPv4 Zorlaması (ETIMEDOUT Çözümü)
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000
+} as any); // <--- İŞTE SİHİRLİ DOKUNUŞ BURADA ("as any")
+
+// --- Bağlantı Testi ---
+transporter.verify((error, success) => {
+    if (error) {
+        console.error("❌ MAIL SUNUCUSU BAĞLANTI HATASI:", error);
+    } else {
+        console.log("✅ MAIL SUNUCUSU HAZIR (IPv4 Modu)");
+    }
 });
 
-// --- DEBUG LOGLARI (Sadece başlangıçta çalışır) ---
-console.log("--- EMAIL SERVICE BAŞLATILIYOR ---");
-console.log("KULLANICI:", process.env.SMTP_USER ? process.env.SMTP_USER : "YOK (HATA!)");
-console.log("ŞİFRE DURUMU:", process.env.SMTP_PASS ? "YÜKLÜ" : "YOK (HATA!)");
-console.log("----------------------------------");
-
-// 3. DOĞRULAMA MAİLİ GÖNDERME
+// 3. DOĞRULAMA MAİLİ FONKSİYONU
 export const sendVerificationEmail = async (to: string, code: string): Promise<void> => {
   try {
-    console.log(`📨 Mail gönderimi başlatılıyor: ${to}`);
+    console.log(`📨 Mail gönderiliyor: ${to}`);
 
     const mailOptions = {
       from: `"Yazılım Blog Forum" <${process.env.SMTP_USER}>`,
@@ -52,7 +60,7 @@ export const sendVerificationEmail = async (to: string, code: string): Promise<v
             ${code}
           </div>
           <p style="color: #999; font-size: 14px; text-align: center;">
-            Bu kod 15 dakika boyunca geçerlidir. Eğer bu işlemi siz yapmadıysanız, bu maili dikkate almayınız.
+            Bu kod 15 dakika boyunca geçerlidir.
           </p>
         </div>
       `,
@@ -65,26 +73,17 @@ export const sendVerificationEmail = async (to: string, code: string): Promise<v
     console.error('❌ Mail gönderme hatası (DETAYLI):');
     console.error(`- Hata Kodu: ${error.code}`);
     console.error(`- Hata Mesajı: ${error.message}`);
-    // Hatayı fırlatıyoruz ki Controller yakalayabilsin
     throw new Error('Email servisi çalışmadı: ' + error.message);
   }
 };
 
-// 4. BÜLTEN MAİLİ GÖNDERME
+// 4. BÜLTEN MAİLİ FONKSİYONU
 export const sendNewsletterEmail = async (to: string, subject: string, html: string): Promise<void> => {
   try {
-    console.log(`📨 Bülten gönderimi başlatılıyor: ${to}`);
-    
-    const info = await transporter.sendMail({
-      from: `"Yazılım Blog Forum" <${process.env.SMTP_USER}>`,
-      to,
-      subject,
-      html
-    });
-
-    console.log(`✅ Bülten maili gönderildi: ${info.messageId}`);
+    await transporter.sendMail({ from: process.env.SMTP_USER, to, subject, html });
+    console.log(`✅ Bülten gönderildi: ${to}`);
   } catch (error: any) {
-    console.error('❌ Bülten maili hatası:', error.message);
+    console.error('❌ Bülten hatası:', error.message);
     throw new Error('Bülten maili gönderilemedi.');
   }
 };
