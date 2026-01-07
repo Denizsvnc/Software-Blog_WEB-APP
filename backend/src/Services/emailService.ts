@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
-
+import dns from 'node:dns';
+dns.setDefaultResultOrder('ipv4first'); 
 // Transporter (Taşıyıcı) Oluşturma
 // Bu ayarlar .env dosyasından gelir
 const transporter = nodemailer.createTransport({
