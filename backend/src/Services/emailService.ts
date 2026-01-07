@@ -1,94 +1,86 @@
-import nodemailer from 'nodemailer';
-import dns from 'node:dns';
+// Dosya: services/emailService.ts
+// Not: Dosya adı emailService olsa da artık altyapı olarak Telegram kullanıyor.
 
-// 1. DNS FIX (Node 17+ IPv6 sorunu için)
-try {
-  dns.setDefaultResultOrder('ipv4first');
-} catch (e) {
-  console.log("DNS ayarı yapılamadı veya gerekmedi.");
+// Node.js 18+ native fetch kullanır. Ekstra paket gerekmez.
+
+// --- 1. AYARLAR VE KONTROLLER ---
+const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_ID; // Senin Chat ID'n
+
+if (!TELEGRAM_TOKEN || !ADMIN_CHAT_ID) {
+    console.warn("⚠️ UYARI: Telegram Token veya Chat ID .env dosyasında eksik!");
 }
 
-// Env Kontrol
-if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.error("🚨 KRİTİK HATA: SMTP_USER veya SMTP_PASS eksik!");
-    // Uygulamanın çökmemesi için process.exit yapmıyoruz ama logluyoruz.
-}
+const BASE_URL = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
 
-// 2. TRANSPORTER
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com', // Standart host
-    port: 587,
-    secure: false, // Port 587 için false (STARTTLS kullanılır)
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS, // DİKKAT: Burada Gmail "Uygulama Şifresi" kullanılmalı
-    },
-    tls: {
-        ciphers: 'SSLv3', // Bazen eski protokol sorunları için gerekebilir ama genelde opsiyoneldir.
-        rejectUnauthorized: true // GÜVENLİK İÇİN TRUE OLMALI (Veya satırı tamamen silin)
-    },
-    // Nodemailer'ın standart tip tanımlarında 'family' olmayabilir ama altyapı destekler.
-    // 'as any' yerine specific casting yapılabilir veya olduğu gibi bırakılabilir.
-    family: 4, 
-} as nodemailer.TransportOptions); 
+// --- 2. YARDIMCI FONKSİYON (Telegram'a İstek Atan) ---
+const sendTelegramMessage = async (text: string): Promise<void> => {
+    try {
+        if (!TELEGRAM_TOKEN || !ADMIN_CHAT_ID) return;
 
-// --- Bağlantı Testi ---
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("❌ MAIL SUNUCUSU BAĞLANTI HATASI:", error);
-    } else {
-        console.log("✅ MAIL SUNUCUSU HAZIR (IPv4 Modu Aktif)");
+        const response = await fetch(`${BASE_URL}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: ADMIN_CHAT_ID,
+                text: text,
+                parse_mode: 'HTML', // Yazıları kalın/italik yapmak için
+                disable_web_page_preview: true
+            })
+        });
+
+        const data = await response.json();
+        
+        if (!data.ok) {
+            console.error(`❌ Telegram API Hatası: ${data.description}`);
+        } else {
+            console.log("✅ Telegram bildirimi gönderildi.");
+        }
+
+    } catch (error: any) {
+        console.error("❌ Telegram bağlantı hatası:", error.message);
+        // Hata fırlatmıyoruz, akış bozulmasın.
     }
-});
-
-// Ortak Gönderici İsmi
-const SENDER_IDENTITY = `"Yazılım Blog Forum" <${process.env.SMTP_USER}>`;
-
-// 3. DOĞRULAMA MAİLİ
-export const sendVerificationEmail = async (to: string, code: string): Promise<void> => {
-  try {
-    const mailOptions = {
-      from: SENDER_IDENTITY,
-      to: to,
-      subject: 'Hesap Doğrulama Kodu',
-      html: `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-          <h2 style="color: #333; text-align: center;">Hoş Geldiniz!</h2>
-          <p style="color: #666; font-size: 16px; text-align: center;">
-            Kayıt işleminizi tamamlamak için kodunuz:
-          </p>
-          <div style="background-color: #f0f7ff; padding: 15px; text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 5px; color: #007bff; border-radius: 6px; margin: 20px 0; border: 1px dashed #007bff;">
-            ${code}
-          </div>
-          <p style="color: #999; font-size: 13px; text-align: center;">
-            Bu kod 15 dakika geçerlidir.
-          </p>
-        </div>
-      `,
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Doğrulama maili gönderildi: ${info.messageId}`);
-
-  } catch (error: any) {
-    console.error(`❌ Mail Hatası (Kime: ${to}):`, error.message);
-    // Hatanın yukarı fırlatılması, API'nin kullanıcıya hata dönmesi için önemlidir.
-    throw new Error('Mail servisi yanıt vermedi.'); 
-  }
 };
 
-// 4. BÜLTEN MAİLİ
+// --- 3. DOĞRULAMA MAİLİ (Simüle Edilmiş) ---
+// Controller bu fonksiyonu çağırınca aslında Telegram'a mesaj gidecek.
+export const sendVerificationEmail = async (to: string, code: string): Promise<void> => {
+    
+    // Mesaj Tasarımı
+    const message = `
+🔐 <b>DOĞRULAMA KODU</b>
+
+👤 <b>Kullanıcı:</b> ${to}
+🔑 <b>Kod:</b> <code>${code}</code>
+
+<i>(Bu mesaj email servisi yerine Telegram üzerinden geliştiriciye iletilmiştir.)</i>
+    `;
+
+    console.log(`📨 Mail simülasyonu: ${to} için kod Telegram'a gönderiliyor...`);
+    await sendTelegramMessage(message);
+};
+
+// --- 4. BÜLTEN MAİLİ (Simüle Edilmiş) ---
 export const sendNewsletterEmail = async (to: string, subject: string, html: string): Promise<void> => {
-  try {
-    await transporter.sendMail({ 
-        from: SENDER_IDENTITY, // İsimli gönderici kullanıldı
-        to, 
-        subject, 
-        html 
-    });
-    console.log(`✅ Bülten gönderildi: ${to}`);
-  } catch (error: any) {
-    console.error('❌ Bülten hatası:', error.message);
-    throw new Error('Bülten gönderilemedi.');
-  }
+    
+    // HTML içeriği Telegram için temizleniyor (Basitçe özet geçiyoruz)
+    // Gerçek HTML'i Telegram'a basmak çok hata verir, o yüzden basitleştirdik.
+    const cleanContent = html
+        .replace(/<br\s*\/?>/gi, '\n') // <br> etiketlerini yeni satır yap
+        .replace(/<[^>]*>?/gm, '')     // Diğer tüm HTML etiketlerini sil
+        .trim()
+        .substring(0, 300);            // Çok uzunsa kes
+
+    const message = `
+📢 <b>YENİ BÜLTEN GÖNDERİMİ</b>
+
+📬 <b>Alıcı:</b> ${to}
+📌 <b>Konu:</b> ${subject}
+
+📝 <b>İçerik Özeti:</b>
+${cleanContent}...
+    `;
+
+    await sendTelegramMessage(message);
 };
