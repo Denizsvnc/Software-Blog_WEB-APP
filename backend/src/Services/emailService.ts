@@ -16,7 +16,7 @@ if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
 // 2. TRANSPORTER (KESİN ÇÖZÜM)
 // "as any" kullanarak TypeScript'in "host özelliği yok" ağlamasını susturuyoruz.
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
+    host: 'smtp.googlemail.com',
     port: 587,
     secure: false, 
     auth: {
