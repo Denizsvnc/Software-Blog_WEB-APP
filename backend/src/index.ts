@@ -13,8 +13,8 @@ async function main() {
     console.log('✅ Veritabanı bağlantısı başarılı.');
 
     // Sunucuyu başlat
-    app.listen(PORT, () => {
-      console.log(`🚀 Sunucu http://localhost:${PORT} adresinde çalışıyor.`);
+    app.listen(Number(PORT), '0.0.0.0', () => {
+      console.log(`🚀 Sunucu port ${PORT} üzerinde ve dış dünyaya açık çalışıyor.`);
     });
 
   } catch (error) {
