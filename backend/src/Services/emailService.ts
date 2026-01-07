@@ -13,13 +13,19 @@ try {
 // 'host', 'port' ve 'secure' yerine doğrudan 'service: gmail' kullanıyoruz.
 // Bu, ETIMEDOUT hatasının kesin çözümüdür.
 const transporter = nodemailer.createTransport({
-  service: 'gmail', 
-  auth: {
-    user: process.env.SMTP_USER, // Railway Variables'dan gelir
-    pass: process.env.SMTP_PASS, // Railway Variables'dan gelir
-  },
-  connectionTimeout: 20000, // 20 saniye bekleme süresi tanıdık
-  greetingTimeout: 20000    // Selamlaşma için ek süre
+    host: 'smtp.gmail.com',  // Doğrudan host adresi
+    port: 587,               // 587 TLS portu (Daha kararlı)
+    secure: false,           // 587 için MUTLAKA false olmalı
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+    },
+    tls: {
+        ciphers: 'SSLv3',          // Bağlantı şifreleme uyumluluğu
+        rejectUnauthorized: false  // Sertifika hatalarını görmezden gel
+    },
+    connectionTimeout: 10000, // 10 saniye bekle
+    greetingTimeout: 10000    // Selamlaşma süresi
 });
 
 // --- DEBUG LOGLARI (Sadece başlangıçta çalışır) ---
