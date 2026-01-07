@@ -24,6 +24,7 @@ console.log("SMTP_HOST:", process.env.SMTP_HOST);
 console.log("SMTP_USER:", process.env.SMTP_USER);
 console.log("SMTP_PASS Yüklü mü?:", process.env.SMTP_PASS ? "EVET" : "HAYIR");
 console.log("--------------------");
+console.log("KONTROL - SMTP_USER:", process.env.SMTP_USER ? "DOLU" : "BOŞ (UNDEFINED)");
 // Doğrulama Maili Gönderme Fonksiyonu
 export const sendVerificationEmail = async (to: string, code: string): Promise<void> => {
   try {
