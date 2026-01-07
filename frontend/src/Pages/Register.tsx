@@ -163,7 +163,7 @@ function Register() {
             {activeStep === 1 && (
               <form onSubmit={handleVerificationSubmit}>
                 <Stack spacing={2.5}>
-                  <Alert severity="info" sx={{ bgcolor: '#808080', color: 'text.primary' }}>
+                  <Alert severity="info" sx={{ bgcolor: '#1b1b1bff', color: 'text.primary' }}>
                     <strong>{email}</strong> adresine 6 haneli doğrulama kodu gönderdik.
                   </Alert>
 

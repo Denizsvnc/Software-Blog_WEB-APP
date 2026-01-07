@@ -1,36 +1,41 @@
 import nodemailer from 'nodemailer';
 import dns from 'node:dns';
-dns.setDefaultResultOrder('ipv4first');
-// Transporter (Taşıyıcı) Oluşturma
-// Bu ayarlar .env dosyasından gelir
+
+// 1. DNS ÇÖZÜMLEME AYARI (Railway için Kritik)
+// IPv6 bağlantı zaman aşımlarını önlemek için IPv4'ü zorluyoruz.
+try {
+  dns.setDefaultResultOrder('ipv4first');
+} catch (e) {
+  // Lokal ortamda hata verirse yoksay
+}
+
+// 2. TRANSPORTER AYARLARI (GMAIL SERVİSİ)
+// 'host', 'port' ve 'secure' yerine doğrudan 'service: gmail' kullanıyoruz.
+// Bu, ETIMEDOUT hatasının kesin çözümüdür.
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: process.env.SMTP_SECURE === 'true',
+  service: 'gmail', 
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: process.env.SMTP_USER, // Railway Variables'dan gelir
+    pass: process.env.SMTP_PASS, // Railway Variables'dan gelir
   },
-  connectionTimeout: 10000, // 10 saniye sonra denemeyi bırak
-  greetingTimeout: 10000,
-  tls: {
-    rejectUnauthorized: false // Sertifika hatalarını görmezden gel
-  }
+  connectionTimeout: 20000, // 20 saniye bekleme süresi tanıdık
+  greetingTimeout: 20000    // Selamlaşma için ek süre
 });
-console.log("DEBUG: SMTP_HOST:", process.env.SMTP_HOST);
-console.log("DEBUG: SMTP_USER:", process.env.SMTP_USER);
-console.log("--- ENV KONTROLÜ ---");
-console.log("SMTP_HOST:", process.env.SMTP_HOST);
-console.log("SMTP_USER:", process.env.SMTP_USER);
-console.log("SMTP_PASS Yüklü mü?:", process.env.SMTP_PASS ? "EVET" : "HAYIR");
-console.log("--------------------");
-console.log("KONTROL - SMTP_USER:", process.env.SMTP_USER ? "DOLU" : "BOŞ (UNDEFINED)");
-// Doğrulama Maili Gönderme Fonksiyonu
+
+// --- DEBUG LOGLARI (Sadece başlangıçta çalışır) ---
+console.log("--- EMAIL SERVICE BAŞLATILIYOR ---");
+console.log("KULLANICI:", process.env.SMTP_USER ? process.env.SMTP_USER : "YOK (HATA!)");
+console.log("ŞİFRE DURUMU:", process.env.SMTP_PASS ? "YÜKLÜ" : "YOK (HATA!)");
+console.log("----------------------------------");
+
+// 3. DOĞRULAMA MAİLİ GÖNDERME
 export const sendVerificationEmail = async (to: string, code: string): Promise<void> => {
   try {
+    console.log(`📨 Mail gönderimi başlatılıyor: ${to}`);
+
     const mailOptions = {
-      from: `"Yazılım Blog Forum" <${process.env.SMTP_USER}>`, // Gönderen Adı
-      to: to, // Alıcı (Register formundan gelen)
+      from: `"Yazılım Blog Forum" <${process.env.SMTP_USER}>`,
+      to: to,
       subject: 'Hesap Doğrulama Kodu',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
@@ -48,20 +53,23 @@ export const sendVerificationEmail = async (to: string, code: string): Promise<v
       `,
     };
 
-    // Maili gönder
     const info = await transporter.sendMail(mailOptions);
-    console.log(`Mail gönderildi: ${info.messageId}`);
+    console.log(`✅ Doğrulama maili başarıyla gönderildi! ID: ${info.messageId}`);
 
-  } catch (error) {
-    console.error('❌ Mail gönderme hatası:', error);
-    // Hata olsa bile kullanıcıya "Mail gönderilemedi" hatası döndürmek yerine
-    // loglayıp süreci devam ettirebiliriz veya throw ile hatayı yukarı fırlatabiliriz.
-    throw new Error('Email servisi çalışmadı.');
+  } catch (error: any) {
+    console.error('❌ Mail gönderme hatası (DETAYLI):');
+    console.error(`- Hata Kodu: ${error.code}`);
+    console.error(`- Hata Mesajı: ${error.message}`);
+    // Hatayı fırlatıyoruz ki Controller yakalayabilsin
+    throw new Error('Email servisi çalışmadı: ' + error.message);
   }
 };
 
+// 4. BÜLTEN MAİLİ GÖNDERME
 export const sendNewsletterEmail = async (to: string, subject: string, html: string): Promise<void> => {
   try {
+    console.log(`📨 Bülten gönderimi başlatılıyor: ${to}`);
+    
     const info = await transporter.sendMail({
       from: `"Yazılım Blog Forum" <${process.env.SMTP_USER}>`,
       to,
@@ -70,8 +78,8 @@ export const sendNewsletterEmail = async (to: string, subject: string, html: str
     });
 
     console.log(`✅ Bülten maili gönderildi: ${info.messageId}`);
-  } catch (error) {
-    console.error('❌ Bülten maili gönderilemedi:', error);
+  } catch (error: any) {
+    console.error('❌ Bülten maili hatası:', error.message);
     throw new Error('Bülten maili gönderilemedi.');
   }
 };
