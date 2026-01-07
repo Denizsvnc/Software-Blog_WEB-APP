@@ -1,0 +1,228 @@
+/* Dark Neon Blog Theme */
+
+:root {
+  --primary-neon: #00ff88;
+  --secondary-neon: #ff006e;
+  --accent-neon: #00d4ff;
+  --warning-neon: #ffbe0b;
+  --dark-bg: #0a0a0a;
+  --dark-card: #1a1a1a;
+  --dark-border: #2a2a2a;
+  --dark-input: #0f0f0f;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--dark-bg);
+  color: var(--text-primary);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--dark-card);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--dark-border);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-neon);
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.3);
+}
+
+/* Selection */
+::selection {
+  background-color: var(--primary-neon);
+  color: #000000;
+}
+
+::-moz-selection {
+  background-color: var(--primary-neon);
+  color: #000000;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Link styling */
+a {
+  color: var(--primary-neon);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  color: var(--accent-neon);
+  text-shadow: 0 0 8px rgba(0, 255, 136, 0.3);
+}
+
+/* Card shadows with neon glow */
+.MuiCard-root {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 16px;
+}
+
+.MuiCard-root:hover {
+  box-shadow: 0 8px 32px rgba(0, 255, 136, 0.15);
+  border-color: rgba(0, 255, 136, 0.3);
+}
+
+/* Button transitions */
+.MuiButton-root {
+  transition: all 0.2s ease;
+  border-radius: 12px;
+}
+
+.MuiButton-root:hover {
+  transform: translateY(-2px);
+}
+
+/* Input focus states with neon glow */
+.MuiOutlinedInput-root {
+  transition: all 0.2s ease;
+  border-radius: 14px;
+}
+
+.MuiOutlinedInput-root:hover {
+  border-color: var(--primary-neon);
+}
+
+.MuiOutlinedInput-root.Mui-focused {
+  border-color: var(--primary-neon);
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.2);
+}
+
+/* Typography utilities */
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-neon {
+  background: linear-gradient(135deg, var(--primary-neon) 0%, var(--accent-neon) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Container utilities */
+.container-custom {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* Responsive utilities */
+@media (max-width: 600px) {
+  .hide-mobile {
+    display: none;
+  }
+
+  .container-custom {
+    padding: 0 12px;
+  }
+}
+
+@media (min-width: 601px) {
+  .hide-desktop {
+    display: none;
+  }
+}
+
+/* Animation utilities */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes neonGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(0, 255, 136, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(0, 255, 136, 0.4);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.3s ease-in;
+}
+
+.neon-glow {
+  animation: neonGlow 2s ease-in-out infinite;
+}
+
+/* Chip styles with neon borders */
+.MuiChip-root {
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  transition: all 0.2s ease;
+}
+
+.MuiChip-root:hover {
+  border-color: var(--primary-neon);
+  background-color: rgba(0, 255, 136, 0.1);
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.2);
+}
+
+/* Divider with subtle glow */
+.MuiDivider-root {
+  border-color: var(--dark-border);
+  transition: all 0.2s ease;
+}
+
+/* Paper elevation shadows */
+.MuiPaper-root {
+  background-color: var(--dark-card);
+  border: 1px solid var(--dark-border);
+}
+

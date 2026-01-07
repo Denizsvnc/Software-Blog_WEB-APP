@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --------------------------------------
+// 1. KULLANICI VE KİMLİK SİSTEMİ
+// --------------------------------------
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  username      String    @unique
+  password      String    // Hashlenmiş şifre
+  name          String?
+  bio           String?   // Profil biyografisi
+  avatarUrl     String?   // Profil resmi
+
+  // Hesap Durumu
+  emailVerified DateTime? // Doğrulama tarihi (boşsa doğrulanmamış)
+  role          Role      @default(USER)     // ADMIN, EDITOR, USER
+  status        UserStatus @default(ACTIVE)  // ACTIVE, BANNED...
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // İlişkiler
+  posts         Post[]    // Yazdığı makaleler
+  likes         Like[]    // Beğendiği makaleler
+  comments      Comment[] // Yaptığı yorumlar
+}
+
+// Email Doğrulama ve Şifre Sıfırlama için Geçici Kodlar
+model VerificationToken {
+  id         String    @id @default(uuid())
+  identifier String    // Email adresi
+  token      String    // 6 haneli kod veya hash
+  expires    DateTime  // Son kullanma tarihi
+  type       TokenType @default(EMAIL_VERIFICATION)
+
+  @@unique([identifier, token]) // Aynı maile aynı koddan iki tane olamaz
+}
+
+// --------------------------------------
+// 2. BLOG İÇERİK YAPISI
+// --------------------------------------
+
+model Post {
+  id            String    @id @default(uuid())
+  title         String
+  slug          String    @unique // URL dostu başlık (orn: nodejs-nedir)
+  content       String    @db.Text // Uzun metin alanı
+  published     Boolean   @default(false) // Taslak/Yayında
+  viewCount     Int       @default(0)     // Okunma sayısı
+
+  // Görsel ve Video Desteği
+  imageUrls     String[]  @default([])    // Görsel URL'leri (local veya external)
+  videoUrls     String[]  @default([])    // Video URL'leri (local veya external)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Yazar İlişkisi
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // İçerik İlişkileri
+  categories    Category[] // Kategoriler (Many-to-Many)
+  likes         Like[]     // Beğeniler
+  comments      Comment[]  // Yorumlar
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique // Örn: "Teknoloji"
+  slug        String   @unique // Örn: "teknoloji"
+  description String?
+
+  posts       Post[]   // Bu kategorideki yazılar
+}
+
+// --------------------------------------
+// 3. SOSYAL ETKİLEŞİM (YORUM & BEĞENİ)
+// --------------------------------------
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // İlişkiler
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  // (Opsiyonel) Alt yorum / Yanıt sistemi
+  parentId  String?
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+}
+
+model Like {
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  // *** KRİTİK NOKTA ***
+  // Composite ID: Bu satır sayesinde bir kullanıcı (userId)
+  // aynı makaleyi (postId) sadece 1 kez beğenebilir.
+  // İkinci kez denerse veritabanı hata fırlatır.
+  @@id([userId, postId])
+}
+
+// --------------------------------------
+// ENUMLAR (SEÇENEKLER)
+// --------------------------------------
+
+enum Role {
+  USER
+  ADMIN
+  EDITOR
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+// --------------------------------------
+// 4. BÜLTEN ALT YAPISI
+// --------------------------------------
+
+model NewsletterSubscriber {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  subscribedAt  DateTime  @default(now())
+  unsubscribed  Boolean   @default(false)
+  unsubscribedAt DateTime?
+
+  campaigns NewsletterCampaignSubscriber[]
+}
+
+model NewsletterCampaign {
+  id             String    @id @default(uuid())
+  subject        String
+  body           String    @db.Text
+  createdAt      DateTime  @default(now())
+  sentAt         DateTime?
+  recipientCount Int       @default(0)
+
+  deliveries NewsletterCampaignSubscriber[]
+}
+
+model NewsletterCampaignSubscriber {
+  id          String               @id @default(uuid())
+  campaignId  String
+  subscriberId String
+  sentAt      DateTime             @default(now())
+
+  campaign   NewsletterCampaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  subscriber NewsletterSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, subscriberId])
+}
